@@ -24,6 +24,8 @@ class ForecastRepositoryImpl(
     }
 
     override suspend fun getCurrentWeather(): LiveData<out CurrentWeatherEntry> {
+        initWeatherData()
+
         return withContext(Dispatchers.IO){
             return@withContext currentWeatherDao.getWeather()
         }

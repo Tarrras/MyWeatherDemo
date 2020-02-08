@@ -20,10 +20,10 @@ const val API_KEY = "36eff393ed28d44a02a822867671dd61"
 
 interface ApixuWeatherApiService {
     @GET("/current")
-    fun getCurrentWeather(
+    suspend fun getCurrentWeather(
         @Query("query") location: String = "London",
         @Query("len") languageCode: String = "en"
-    ): Deferred<CurrentWeatherResponse>
+    ): CurrentWeatherResponse
 
     companion object{
         operator fun invoke(
