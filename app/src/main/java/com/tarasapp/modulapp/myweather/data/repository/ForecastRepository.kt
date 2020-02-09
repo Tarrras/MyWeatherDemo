@@ -4,5 +4,6 @@ import androidx.lifecycle.LiveData
 import com.tarasapp.modulapp.myweather.data.db.entity.CurrentWeatherEntry
 
 interface ForecastRepository {
-    suspend fun getCurrentWeather(): LiveData<out CurrentWeatherEntry>
+    suspend fun cacheWeather()
+    fun getCurrentWeather(): LiveData<CurrentWeatherEntry>
 }

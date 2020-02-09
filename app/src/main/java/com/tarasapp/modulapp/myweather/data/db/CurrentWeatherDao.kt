@@ -12,7 +12,7 @@ import com.tarasapp.modulapp.myweather.data.db.unitlocalize.CurrentWeatherEntryD
 @Dao
 interface CurrentWeatherDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun upsert(weatherEntry: CurrentWeatherEntry)
+    suspend fun upsert(weatherEntry: CurrentWeatherEntry)
 
     @Query("select * from current_weather where id=$CURRENT_WEATHER_ID")
     fun getWeather(): LiveData<CurrentWeatherEntry>

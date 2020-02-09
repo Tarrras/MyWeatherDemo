@@ -5,10 +5,7 @@ import com.tarasapp.modulapp.myweather.data.db.CurrentWeatherDao
 import com.tarasapp.modulapp.myweather.data.db.entity.CurrentWeatherEntry
 import com.tarasapp.modulapp.myweather.data.network.WeatherNetworkDataSource
 import com.tarasapp.modulapp.myweather.data.network.response.CurrentWeatherResponse
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.threeten.bp.ZonedDateTime
 import java.util.*
 
@@ -18,39 +15,38 @@ class ForecastRepositoryImpl(
 ) : ForecastRepository {
 
     init {
-        weatherNetworkDataSource.downloadedCurrentWeather.observeForever{newCurrentWeather ->
+        weatherNetworkDataSource.downloadedCurrentWeather.observeForever { newCurrentWeather ->
             persistFetchedCurrentWeather(newCurrentWeather)
         }
     }
 
-    override suspend fun getCurrentWeather(): LiveData<out CurrentWeatherEntry> {
-        initWeatherData()
-
-        return withContext(Dispatchers.IO){
-            return@withContext currentWeatherDao.getWeather()
-        }
+    override suspend fun cacheWeather() {
+        fetchCurrentWeather()
     }
 
-    private fun persistFetchedCurrentWeather(fetchedWeather: CurrentWeatherResponse){
-        GlobalScope.launch(Dispatchers.IO){
-            currentWeatherDao.upsert(fetchedWeather.currentWeatherEntry)
-        }
-    }
-
-    private suspend fun initWeatherData(){
-        if(isFetchedCurrentNeeded(ZonedDateTime.now().minusHours(1)))
+    override fun getCurrentWeather(): LiveData<CurrentWeatherEntry> {
+        GlobalScope.launch {
             fetchCurrentWeather()
+        }
+        return currentWeatherDao.getWeather()
     }
 
-    private suspend fun fetchCurrentWeather(){
+
+    private fun persistFetchedCurrentWeather(fetchedWeather: CurrentWeatherResponse) {
+        GlobalScope.launch(Dispatchers.IO) {
+                currentWeatherDao.upsert(fetchedWeather.currentWeatherEntry)
+        }
+    }
+
+    private suspend fun fetchCurrentWeather() {
         weatherNetworkDataSource.fetchCurrnetWeather(
             "London",
             Locale.getDefault().language
         )
     }
 
-    private fun isFetchedCurrentNeeded(lastFetchTime: ZonedDateTime): Boolean{
-        val thirtyMinutesAgo = ZonedDateTime.now().minusMinutes(30)
+    private fun isFetchedCurrentNeeded(lastFetchTime: ZonedDateTime): Boolean {
+        val thirtyMinutesAgo = ZonedDateTime.now().minusMinutes(1)
         return lastFetchTime.isBefore(thirtyMinutesAgo)
     }
 }
